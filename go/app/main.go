@@ -21,6 +21,16 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type Item struct {
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	// Image    string `json:"image_name"`
+}
+
+type Items struct {
+	Items []Item `json:"items"`
+}
+
 // hello is an endpoint to return a Hello, world! message.
 func hello(c echo.Context) error {
 	res := Response{
@@ -29,19 +39,31 @@ func hello(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-// addItem is an endpoint to add a new item.
+var item Item
+var items Items
+
 func addItem(c echo.Context) error {
 	// Get form data
 	name := c.FormValue("name")
 	c.Logger().Infof("Receive item: %s", name)
 
-	message := fmt.Sprintf("item received: %s", name)
-	res := Response{
-		Message: message,
-	}
+	category := c.FormValue("category")
+	c.Logger().Infof("Receive category: %s", category)
 
-	// http.StatusCreated(201) is also acceptable.
+	item = Item{Name: name, Category: category}
+	fmt.Println(item)
+
+	message := fmt.Sprintf("item received: %s, %s", item.Name, item.Category)
+	res := Response{Message: message}
+
+	items.Items = append(items.Items, item)
+	log.Printf("%v", items)
+
 	return c.JSON(http.StatusOK, res)
+}
+
+func getItems(c echo.Context) error {
+	return c.JSON(http.StatusOK, items)
 }
 
 // getImage is an endpoint to return an image.
@@ -91,6 +113,7 @@ func main() {
 	// Routes
 	e.GET("/", hello)
 	e.POST("/items", addItem)
+	e.GET("/items", getItems)
 	e.GET("/image/:imageFilename", getImage)
 
 	// Start server
